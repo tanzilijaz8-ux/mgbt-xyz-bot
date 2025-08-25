@@ -9,9 +9,11 @@ def add_indicators(df: pd.DataFrame,
                    macd_fast: int = 12,
                    macd_slow: int = 26,
                    macd_signal: int = 9) -> pd.DataFrame:
-    out = df.copy()
-    # RSI
-    out["rsi"] = ta.momentum.RSIIndicator(close=out["Close"], window=rsi_period).rsi()
+  out = df.copy()
+# RSI
+out["rsi"] = ta.momentum.RSIIndicator(
+    close=out["Close"].astype(float).squeeze(),
+    window=rsi_period).rsi()
     # SMAs
     out["sma_fast"] = out["Close"].rolling(sma_fast).mean()
     out["sma_slow"] = out["Close"].rolling(sma_slow).mean()
