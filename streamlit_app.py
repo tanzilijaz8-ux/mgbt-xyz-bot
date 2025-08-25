@@ -22,5 +22,3 @@ result = generate_signals(test_data)
 
 st.subheader("📊 Trading Signals")
 st.dataframe(result)
-
-
