@@ -1,47 +1,56 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from strategy import generate_signals
 
-# --- Page config ---
 st.set_page_config(page_title="MGBT XYZ Bot", layout="wide")
 
-# --- Header ---
-st.title("🤖 MGBT XYZ Bot")
-st.write("Your AI-powered trading signals dashboard.")
+st.title("📊 MGBT XYZ Bot - Signal Generator")
 
-# --- Sidebar Controls ---
-st.sidebar.header("Settings ⚙️")
-stock = st.sidebar.text_input("Enter Stock Symbol", "AAPL")
-date_range = st.sidebar.date_input("Select Date Range")
+# --- Trading Platform ---
+st.subheader("Trading Platform")
+platform = st.radio("Select Platform", ["Quotex", "Pocket Option", "Olymp Trade", "IQ Option"], horizontal=True)
 
-# --- Dummy Data (replace later with live data e.g., yfinance) ---
-data = {
-    "sma_fast": [95, 105, 110],
-    "sma_slow": [100, 100, 100],
+# --- Market Type ---
+st.subheader("Market Type")
+market_type = st.radio("Choose Market Type", ["LIVE", "OTC"], horizontal=True)
+
+# --- Currency Pair ---
+st.subheader("Currency Pair")
+currency_pair = st.selectbox("Select Pair", ["EUR/USD", "GBP/USD", "USD/JPY", "BTC/USD"])
+if market_type == "OTC":
+    currency_pair += " OTC"
+
+# --- Time Frame ---
+st.subheader("Time Frame")
+time_frame = st.radio(
+    "Select Time Frame",
+    ["5s", "10s", "15s", "30s", "1m", "5m", "10m", "15m", "30m"],
+    horizontal=True
+)
+
+# --- Fake / Demo Data ---
+sample_data = pd.DataFrame({
+    "sma_fast": [105, 110, 95],
+    "sma_slow": [100, 108, 97],
     "rsi": [40, 65, 80],
-    "macd": [-0.5, 1.2, 0.2],
-    "macd_signal": [-0.2, 1.0, 0.5],
-    "macd_diff": [0.3, 0.2, -0.3],
-}
-df = pd.DataFrame(data)
+    "macd": [0.5, -0.3, 0.2],
+    "macd_signal": [0.3, -0.2, 0.25],
+    "macd_diff": [0.2, -0.1, -0.05]
+})
 
-# --- Generate Signals ---
-df = generate_signals(df)
+signals = generate_signals(sample_data)
 
-# --- Display Signals ---
-st.subheader("📊 Trading Signals")
-st.dataframe(df, use_container_width=True)
+# --- Show Result ---
+st.subheader("📌 Generated Signal")
+last_signal = signals["signal"].iloc[-1]
 
-# --- Plot (example RSI chart) ---
-st.subheader("📈 RSI Chart")
-fig, ax = plt.subplots()
-ax.plot(df.index, df["rsi"], label="RSI", color="blue")
-ax.axhline(70, color="red", linestyle="--", label="Overbought")
-ax.axhline(30, color="green", linestyle="--", label="Oversold")
-ax.set_title("RSI Indicator")
-ax.legend()
-st.pyplot(fig)
+if last_signal == 1:
+    st.success(f"✅ BUY Signal for {currency_pair} ({time_frame}) on {platform}")
+elif last_signal == -1:
+    st.error(f"❌ SELL Signal for {currency_pair} ({time_frame}) on {platform}")
+else:
+    st.warning(f"⏸ HOLD Signal for {currency_pair} ({time_frame}) on {platform}")
 
-st.success("✅ Bot is running. Modify strategy.py to change rules.")
+# Show table
+with st.expander("🔍 View Signal Data"):
+    st.dataframe(signals)
